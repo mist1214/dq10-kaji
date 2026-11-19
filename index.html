@@ -128,6 +128,17 @@
     .yt-btn { padding: 5px 10px; }
     footer { margin-top: 4px; }
   }
+  /* 配信バナー表示中は少し詰めて、バナー分も画面内に収める */
+  body.has-banner h1 { margin: 0 0 3px; }
+  body.has-banner .mode-label { margin-top: 3px; }
+  body.has-banner .panel { padding: 4px 9px; }
+  body.has-banner .group-head { margin-bottom: 0; }
+  body.has-banner .val { min-height: 13px; }
+  body.has-banner .temp-btn { height: 26px; }
+  body.has-banner .yt-btn { padding: 3px 10px; }
+  body.has-banner .panel { margin-bottom: 2px; }
+  body.has-banner footer { margin-top: 0; }
+  body.has-banner #liveBanner { margin-bottom: 3px; padding: 6px 10px; }
   /* 画面が低くて収まりきらない時はスクロールを許可し、見切れを防ぐ（CSSの最後に置いて優先させる） */
   @media (max-height: 640px) {
     body { overflow-y: auto; height: auto; min-height: 100dvh; }
@@ -137,6 +148,10 @@
 </head>
 <body>
 <div class="wrap">
+  <div id="liveBanner" style="display:none;align-items:center;gap:8px;background:#c81e1e;color:#fff;padding:7px 10px;font-size:12.5px;font-weight:bold;border-radius:9px;margin-bottom:6px;flex:none;">
+    <a id="liveBannerLink" href="#" target="_blank" rel="noopener" style="color:#fff;text-decoration:none;flex:1;line-height:1.4;"></a>
+    <button id="liveBannerClose" aria-label="閉じる" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:bold;border-radius:6px;padding:2px 9px;cursor:pointer;flex:none;font-family:inherit;">×</button>
+  </div>
   <h1>🛡️ DQ10鍛冶威力数値表byみすとgames‐YT 🛡️</h1>
 
   <div class="panel">
@@ -240,6 +255,40 @@ function resetTemp() {
   render();
 }
 render();
+</script>
+<script>
+  // 配信のお知らせバー（×で消すと、そのお知らせについては再表示しない）
+  (function () {
+    var STORE_KEY = 'mist_live_banner_dismissed';
+    fetch('https://flat-cake-9635mist-live-check.mist12141208-ec9.workers.dev/')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d) return;
+        var text, key;
+        if (d.live) {
+          text = '🔴 現在開発者がYouTubeでライブ配信中です！応援よろしくお願いいたします！';
+          key = 'live:' + (d.videoId || '');
+        } else if (d.lastLiveDate) {
+          text = '📺 ' + d.lastLiveDate + 'に開発者がライブ配信をしてました！チャンネル登録をして待っててね！';
+          key = 'last:' + d.lastLiveDate;
+        } else {
+          return;
+        }
+        try { if (localStorage.getItem(STORE_KEY) === key) return; } catch (e) {}
+        var bar = document.getElementById('liveBanner');
+        var link = document.getElementById('liveBannerLink');
+        link.textContent = text;
+        link.href = d.url;
+        bar.style.display = 'flex';
+        document.body.classList.add('has-banner');
+        document.getElementById('liveBannerClose').onclick = function () {
+          bar.style.display = 'none';
+          document.body.classList.remove('has-banner');
+          try { localStorage.setItem(STORE_KEY, key); } catch (e) {}
+        };
+      })
+      .catch(function () {});
+  })();
 </script>
 </body>
 </html>

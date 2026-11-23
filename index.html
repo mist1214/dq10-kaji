@@ -139,6 +139,14 @@
   body.has-banner .panel { margin-bottom: 2px; }
   body.has-banner footer { margin-top: 0; }
   body.has-banner #liveBanner { margin-bottom: 3px; padding: 6px 10px; }
+  /* 配信バナー：配信中のみ横スクロール（テロップ） */
+  #liveBannerLink.mist-marquee { overflow: hidden; }
+  #liveBannerLink.mist-marquee .mist-marquee-track { display: inline-flex; white-space: nowrap; animation: mist-marquee-scroll 18s linear infinite; }
+  #liveBannerLink.mist-marquee .mist-marquee-copy { padding-right: 4em; }
+  @keyframes mist-marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    #liveBannerLink.mist-marquee .mist-marquee-track { animation: none; }
+  }
   /* 画面が低くて収まりきらない時はスクロールを許可し、見切れを防ぐ（CSSの最後に置いて優先させる） */
   @media (max-height: 640px) {
     body { overflow-y: auto; height: auto; min-height: 100dvh; }
@@ -149,7 +157,7 @@
 <body>
 <div class="wrap">
   <div id="liveBanner" style="display:none;align-items:center;gap:8px;background:#c81e1e;color:#fff;padding:7px 10px;font-size:12.5px;font-weight:bold;border-radius:9px;margin-bottom:6px;flex:none;">
-    <a id="liveBannerLink" href="#" target="_blank" rel="noopener" style="color:#fff;text-decoration:none;flex:1;line-height:1.4;"></a>
+    <a id="liveBannerLink" href="#" target="_blank" rel="noopener" style="color:#fff;text-decoration:none;flex:1;min-width:0;line-height:1.4;"></a>
     <button id="liveBannerClose" aria-label="閉じる" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;font-weight:bold;border-radius:6px;padding:2px 9px;cursor:pointer;flex:none;font-family:inherit;">×</button>
   </div>
   <h1>🛡️ DQ10鍛冶威力数値表byみすとgames‐YT 🛡️</h1>
@@ -277,7 +285,21 @@ render();
         try { if (localStorage.getItem(STORE_KEY) === key) return; } catch (e) {}
         var bar = document.getElementById('liveBanner');
         var link = document.getElementById('liveBannerLink');
-        link.textContent = text;
+        if (d.live) {
+          // 配信中のみ横スクロール（テロップ）表示にする
+          link.classList.add('mist-marquee');
+          var track = document.createElement('span');
+          track.className = 'mist-marquee-track';
+          for (var i = 0; i < 2; i++) {
+            var copy = document.createElement('span');
+            copy.className = 'mist-marquee-copy';
+            copy.textContent = text;
+            track.appendChild(copy);
+          }
+          link.appendChild(track);
+        } else {
+          link.textContent = text;
+        }
         link.href = d.url;
         bar.style.display = 'flex';
         document.body.classList.add('has-banner');
